@@ -214,7 +214,36 @@ ggplot(Whickham, mapping = aes(x= smoker, fill=outcome)) +
        x = "Smoking Status",
        y = "Proportion",
        fill = "Outcome")
+```
+
+6. Create a new variable called age_cat using the following scheme:
+age <= 44 ~ "18-44"
+age > 44 & age <= 64 ~ "45-64"
+age > 64 ~ "65+"
+
+```{r}
+Whickham <- Whickham %>%
+  mutate(age_cat = case_when(
+    age <= 44 ~ "18-44",
+    age > 44 & age <= 64 ~ "45-64",
+    age > 64 ~ "65+"
+  ))
 
 ```
 
+7. When faceted by age category, the picture makes more sense: in each age category, there are a greater proportion of dead smokers than dead non-smokers, and overall the proportion of dead people increases as you move up the age brackets. This is more consistent with the idea that smoking is related to a greater probability of death. 
 
+```{r}
+Whickham %>%
+  count(smoker, age_cat, outcome)
+
+ggplot(Whickham, mapping = aes(x= smoker, fill=outcome)) +
+  geom_bar(position = "fill") +
+  facet_wrap(~age_cat) +
+  theme_minimal() +
+  labs(title = "Proportion of Smokers and Non-Smokers Who are Alive and Dead",
+       subtitle = "By Age Category",
+       x = "Smoking Status",
+       y = "Proportion",
+       fill = "Outcome")
+```
