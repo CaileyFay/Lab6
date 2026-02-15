@@ -1,7 +1,7 @@
 ---
 title: "Lab 06 - Ugly charts and Simpson's paradox"
-author: "Insert your name here"
-date: "Insert date here"
+author: "Cailey Fay"
+date: "2/15/26"
 output: github_document
 ---
 
