@@ -232,6 +232,173 @@ geom_col() +
 #I don't know how to get rid of that random "aquaculture" on the side there
 ```
 
-…
+### Stretch Practice
 
-Add exercise headings as needed.
+Loading and inspecting the data:
+
+``` r
+data("Whickham")
+?Whickham
+library(performance)
+```
+
+    ## Warning: package 'performance' was built under R version 4.5.2
+
+Exercises: 1. This does not seem like an experiment. It is a survey and
+the variables are survival status, smoking status, and age, none of
+which can be manipulated experimentally.
+
+2.  There are 1314 observations. Each observation represents one woman.
+
+3.  There are three variables: smoking status -factor with 2 levels-,
+    outcome -factor with 2 levels-, and age -integer.
+
+``` r
+str(Whickham$outcome)
+```
+
+    ##  Factor w/ 2 levels "Alive","Dead": 1 1 2 1 1 1 1 2 1 1 ...
+
+``` r
+str(Whickham$age)
+```
+
+    ##  int [1:1314] 23 18 71 67 64 38 45 76 28 27 ...
+
+``` r
+str(Whickham$smoker)
+```
+
+    ##  Factor w/ 2 levels "No","Yes": 2 2 2 1 1 2 2 1 1 1 ...
+
+``` r
+#visuals 
+ggplot(Whickham, mapping = aes(x=outcome)) + 
+  geom_bar() +
+  labs(title = "Frequency of Subjects Alive and Dead in the Whickham Dataset",
+       x= "Outcome",
+       y = "Count")
+```
+
+![](lab-06_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+``` r
+ggplot(Whickham, mapping = aes(x=age)) + 
+  geom_histogram(binwidth = 5) +
+  labs(title= "Histogram of Age in the Whickham Dataset",
+                          x="Age",
+                          y= "Frequency")
+```
+
+![](lab-06_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
+
+``` r
+ggplot(Whickham, mapping = aes(x=smoker)) + 
+  geom_bar() +
+  labs(title = "Frequency of Smokers and Non-Smokers in the Whickham Dataset",
+       x= "Initial Smoking Status",
+       y = "Count")
+```
+
+![](lab-06_files/figure-gfm/unnamed-chunk-10-3.png)<!-- -->
+
+4.  I would expect people who were smokers to be more likely to have the
+    outcome status “Dead”.
+
+Here are the counts:
+
+``` r
+Whickham %>%
+  count(smoker, outcome)
+```
+
+    ##   smoker outcome   n
+    ## 1     No   Alive 502
+    ## 2     No    Dead 230
+    ## 3    Yes   Alive 443
+    ## 4    Yes    Dead 139
+
+5.  This visual suggests the opposite of what I expected, however it is
+    not corrected for the total number of non-smokers versus smokers. My
+    chart shows that if you look at numbers of peopple - and not
+    proportions - more non-smokers have died versus smokers.
+
+``` r
+ggplot(Whickham, mapping = aes(x= smoker, fill=outcome)) +
+  geom_bar(stat = "count") +
+  theme_minimal() +
+  labs(title = "Smokers and Non-Smokers Who are Alive and Dead",
+       x = "Smoking Status",
+       y = "Count",
+       fill = "Outcome")
+```
+
+![](lab-06_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+I am going to make this slightly different, so it is adjusting for how
+many people are smokers versus not smokers. This graph still suggests
+that more people who are dead that were non-smokers, which is whacky.
+
+``` r
+ggplot(Whickham, mapping = aes(x= smoker, fill=outcome)) +
+  geom_bar(position = "fill") +
+  theme_minimal() +
+  labs(title = "Proportion of Smokers and Non-Smokers Who are Alive and Dead",
+       x = "Smoking Status",
+       y = "Proportion",
+       fill = "Outcome")
+```
+
+![](lab-06_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+6.  Create a new variable called age_cat using the following scheme: age
+    \<= 44 ~ “18-44” age \> 44 & age \<= 64 ~ “45-64” age \> 64 ~ “65+”
+
+``` r
+Whickham <- Whickham %>%
+  mutate(age_cat = case_when(
+    age <= 44 ~ "18-44",
+    age > 44 & age <= 64 ~ "45-64",
+    age > 64 ~ "65+"
+  ))
+```
+
+7.  When faceted by age category, the picture makes more sense: in each
+    age category, there are a greater proportion of dead smokers than
+    dead non-smokers, and overall the proportion of dead people
+    increases as you move up the age brackets. This is more consistent
+    with the idea that smoking is related to a greater probability of
+    death.
+
+``` r
+Whickham %>%
+  count(smoker, age_cat, outcome)
+```
+
+    ##    smoker age_cat outcome   n
+    ## 1      No   18-44   Alive 327
+    ## 2      No   18-44    Dead  12
+    ## 3      No   45-64   Alive 147
+    ## 4      No   45-64    Dead  53
+    ## 5      No     65+   Alive  28
+    ## 6      No     65+    Dead 165
+    ## 7     Yes   18-44   Alive 270
+    ## 8     Yes   18-44    Dead  15
+    ## 9     Yes   45-64   Alive 167
+    ## 10    Yes   45-64    Dead  80
+    ## 11    Yes     65+   Alive   6
+    ## 12    Yes     65+    Dead  44
+
+``` r
+ggplot(Whickham, mapping = aes(x= smoker, fill=outcome)) +
+  geom_bar(position = "fill") +
+  facet_wrap(~age_cat) +
+  theme_minimal() +
+  labs(title = "Proportion of Smokers and Non-Smokers Who are Alive and Dead",
+       subtitle = "By Age Category",
+       x = "Smoking Status",
+       y = "Proportion",
+       fill = "Outcome")
+```
+
+![](lab-06_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->

@@ -173,7 +173,9 @@ ggplot(Whickham, mapping = aes(x=outcome)) +
        x= "Outcome",
        y = "Count")
 
-hist(Whickham$age) + labs(title= "Histogram of Age in the Whickham Dataset",
+ggplot(Whickham, mapping = aes(x=age)) + 
+  geom_histogram(binwidth = 5) +
+  labs(title= "Histogram of Age in the Whickham Dataset",
                           x="Age",
                           y= "Frequency")
 
