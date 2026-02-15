@@ -9,7 +9,9 @@ Cailey Fay
 library(tidyverse) 
 library(dsbox)
 library(mosaicData) 
+library(ggplot2)
 staff <- read_csv("data/instructional-staff.csv")
+fisheries <- read_csv("data/fisheries.csv")
 ```
 
 I think when we convert to long-form data, we will have 6 columns. If
@@ -54,8 +56,9 @@ staff_long %>%
     ## `geom_line()`: Each group consists of only one observation.
     ## ℹ Do you need to adjust the group aesthetic?
 
-![](lab-06_files/figure-gfm/unnamed-chunk-2-1.png)<!-- --> This doesn’t
-quite work.
+![](lab-06_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+This doesn’t quite work.
 
 ### Exercise 1
 
@@ -112,6 +115,122 @@ staff_long %>%
 ![](lab-06_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ### Exercise 3
+
+I think it depends on what the point of the visual is, which is sort of
+unclear because of how ugly and unreadable the graphs are. A graph is
+going to look very different if we are interested in comparing total
+volume from country to country, versus if we are interested in the
+proportion of fish are captured vs farmed for each country.
+
+The line chart visual looks like it is taking the proportion versus
+total approach, whereas the pie charts look like they are communicating
+each country’s proportion of the total amount of captured fish and
+farmed fish.
+
+To do a better job showing the line chart, I would start by first making
+it into bars and restricting it to the top-ten heavy hitters in the fish
+department, in terms of total.This should help make the y scale more
+reasonable and interpretable, even if we loose a little bit of
+information about the countries. I also want to convert the data so that
+we have a 2 rows per country where one is the capture and one is the
+aquaculture. I am going to reapply the pivot strategy from earlier in
+the lab.
+
+``` r
+options(scipen = 999) # sick of scientific notation
+
+fisheries_long <- fisheries %>%
+  pivot_longer(cols = c("capture","aquaculture"), names_to = "type") %>%
+  mutate(value = as.numeric(value))
+fisheries_long
+```
+
+    ## # A tibble: 432 × 4
+    ##    country        total type        value
+    ##    <chr>          <dbl> <chr>       <dbl>
+    ##  1 Afghanistan     2200 capture      1000
+    ##  2 Afghanistan     2200 aquaculture  1200
+    ##  3 Albania         8836 capture      7886
+    ##  4 Albania         8836 aquaculture   950
+    ##  5 Algeria        96361 capture     95000
+    ##  6 Algeria        96361 aquaculture  1361
+    ##  7 American Samoa  3067 capture      3047
+    ##  8 American Samoa  3067 aquaculture    20
+    ##  9 Andorra            0 capture         0
+    ## 10 Andorra            0 aquaculture     0
+    ## # ℹ 422 more rows
+
+``` r
+top_ten_long <- fisheries_long %>%
+  arrange(desc(total)) %>%
+  filter(total >= 3878324) #the total of the 10th highest producer 
+```
+
+``` r
+ggplot(top_ten_long, mapping = aes(x=fct_reorder(country, total, .desc = FALSE), y=total, fill=type)) +
+  geom_col() +
+  theme_classic()+
+  labs(title = "Proportion of farming and capture in the top-ten producing countries",
+       x= "Country",
+       y = "Number of Fish",
+       fill = "Fishing Type") +
+  coord_flip()
+```
+
+![](lab-06_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+#this graph still isn't amazing but it is more readable 
+```
+
+Next I will take on those pie charts. I think the plan is to facet by
+type. I will also switch it to polar coordinates to get it into the pie
+chart look. The result also isn’t awesome but its something
+
+``` r
+top_ten_long %>%
+  filter(type == "capture") %>%
+ggplot(top_ten_long, mapping = aes(x=type, y=value, fill = country)) +
+geom_col() + 
+  coord_polar(theta = "y") + 
+  theme_minimal() +
+  labs(title = "Number of Captured Fish in the Top-Ten Producing Countries",
+       x= "Captured Fish",
+       y= element_blank(),
+       fill = "Country") 
+```
+
+    ## Warning: `label` cannot be a <ggplot2::element_blank> object.
+
+![](lab-06_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
+#dodged_bar_plot + coord_polar()
+#I don't know how to get rid of that random "capture" on the side there
+```
+
+And I can do the same thing for farmed fish. Faceting was too hard.
+
+``` r
+top_ten_long %>%
+  filter(type == "aquaculture") %>%
+ggplot(top_ten_long, mapping = aes(x=type, y=value, fill = country)) +
+geom_col() + 
+  coord_polar(theta = "y") + 
+  theme_minimal() +
+  labs(title = "Number of Farmed Fish in the Top-Ten Producing Countries",
+       x= "Farmed Fish",
+       y= element_blank(),
+       fill = "Country") 
+```
+
+    ## Warning: `label` cannot be a <ggplot2::element_blank> object.
+
+![](lab-06_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+#I don't know how to get rid of that random "aquaculture" on the side there
+```
 
 …
 
